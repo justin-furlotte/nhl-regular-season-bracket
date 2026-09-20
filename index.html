@@ -6,297 +6,8 @@
 <title>NHL Standings Predictor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Condensed:wght@600;700;800&family=Sofia+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: inherit; }
-
-  :root {
-    box-sizing: border-box;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    color-scheme: light;
-
-    --display: 'Sofia Sans Condensed', 'Arial Narrow', 'Roboto Condensed', system-ui, sans-serif;
-    --body: 'Sofia Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-
-    --bg: #E8F0F6;
-    --surface: #FFFFFF;
-    --field: #F5F9FC;
-    --ink: #0F1D2B;
-    --muted: #5A6C7D;
-    --line: #D5E0E9;
-    --track: #CFDBE5;
-    --accent: #1F5FBF;
-    --red: #C8102E;
-    --ok: #17855A;
-    --warn: #B45F06;
-    --shadow: 0 1px 2px rgba(15, 29, 43, .06), 0 8px 24px rgba(15, 29, 43, .06);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --bg: #0A131C;
-      --surface: #111E2B;
-      --field: #0B1621;
-      --ink: #E7EEF4;
-      --muted: #8CA0B2;
-      --line: #223649;
-      --track: #22364A;
-      --accent: #6AA3FF;
-      --red: #FF5C72;
-      --ok: #4CC38A;
-      --warn: #E8A94A;
-      --shadow: none;
-    }
-  }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --bg: #0A131C;
-    --surface: #111E2B;
-    --field: #0B1621;
-    --ink: #E7EEF4;
-    --muted: #8CA0B2;
-    --line: #223649;
-    --track: #22364A;
-    --accent: #6AA3FF;
-    --red: #FF5C72;
-    --ok: #4CC38A;
-    --warn: #E8A94A;
-    --shadow: none;
-  }
-
-  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font: 400 16px/1.4 var(--body);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ---------- Header + counter ---------- */
-  .top {
-    position: sticky;
-    top: env(safe-area-inset-top, 0px);
-    z-index: 20;
-    background: var(--bg);
-    background: color-mix(in srgb, var(--bg) 90%, transparent);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    border-top: 3px solid var(--red);
-    border-bottom: 1px solid var(--line);
-  }
-  .top-inner {
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  .title { min-width: 0; }
-  h1 {
-    margin: 0;
-    font: 800 clamp(21px, 4vw, 30px)/1.05 var(--display);
-    letter-spacing: -0.005em;
-  }
-  .sub { margin: 3px 0 0; font-size: 14px; color: var(--muted); }
-
-  .counter { text-align: right; flex: 0 0 auto; width: 200px; }
-  .counter-row { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; }
-  .counter-num {
-    font: 800 28px/1 var(--display);
-    font-variant-numeric: tabular-nums;
-  }
-  .counter-label { font-size: 13px; color: var(--muted); }
-  .meter {
-    position: relative;
-    margin-top: 6px;
-    height: 6px;
-    border-radius: 99px;
-    background: var(--track);
-    overflow: hidden;
-  }
-  .zone {
-    position: absolute; top: 0; bottom: 0; right: 0; left: 66%;
-    background: var(--ok);
-    opacity: .22;
-  }
-  .fill {
-    position: absolute; top: 0; bottom: 0; left: 0; width: 0;
-    background: var(--warn);
-    border-radius: 99px;
-    transition: width .18s ease, background-color .18s ease;
-  }
-  .counter.is-ok .fill { background: var(--ok); }
-  .counter-note { margin-top: 5px; font-size: 12px; line-height: 1.25; color: var(--muted); }
-  .counter.is-ok .counter-note { color: var(--ok); }
-  .counter.is-flash .counter-note { color: var(--warn); }
-
-  /* ---------- Page ---------- */
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 20px 20px 48px; }
-  .intro { margin: 0; max-width: 62ch; color: var(--muted); }
-  .how { margin-top: 12px; max-width: 62ch; }
-  .how summary { cursor: pointer; color: var(--accent); font-weight: 600; width: fit-content; }
-  .how .body {
-    margin-top: 8px;
-    padding: 4px 16px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    color: var(--muted);
-    font-size: 15px;
-  }
-  .how strong { color: var(--ink); font-weight: 600; }
-
-  .conf { margin-top: 28px; }
-  .conf h2 { margin: 0 0 12px; font: 800 24px/1 var(--display); }
-  .divs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-    gap: 16px;
-    align-items: start;
-  }
-
-  /* ---------- Division card ---------- */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-  .card-h { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 16px 8px; }
-  .card-h h3 { margin: 0; font: 700 21px/1 var(--display); }
-  .card-total { font-size: 13px; color: var(--muted); }
-  .card-total b {
-    font: 700 17px/1 var(--display);
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-  }
-
-  .list { list-style: none; margin: 0; padding: 0 6px 6px; }
-  .row {
-    display: grid;
-    grid-template-columns: 24px 28px 36px minmax(0, 1fr) 18px auto;
-    align-items: center;
-    column-gap: 10px;
-    padding: 8px 10px;
-    background: var(--surface);
-    border-radius: 10px;
-  }
-  .row + .row { border-top: 1px solid var(--line); }
-
-  .grip {
-    appearance: none;
-    border: 0;
-    background: none;
-    padding: 0;
-    width: 24px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    color: var(--muted);
-    cursor: grab;
-    touch-action: none;
-    border-radius: 6px;
-  }
-  .grip:hover { color: var(--ink); }
-  .grip:active { cursor: grabbing; }
-  .grip:focus-visible, .link-btn:focus-visible, .how summary:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .rank {
-    font: 800 25px/1 var(--display);
-    font-variant-numeric: tabular-nums;
-    text-align: center;
-  }
-  .badge {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: grid; place-items: center;
-    background: var(--c);
-    color: var(--f);
-    font: 800 12px/1 var(--display);
-    letter-spacing: .02em;
-    box-shadow: inset 0 0 0 1px rgba(128, 128, 128, .28);
-  }
-  .name { min-width: 0; line-height: 1.15; }
-  .city, .nick { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .city { font-weight: 600; font-size: 16px; }
-  .nick { font-size: 13px; color: var(--muted); }
-
-  .flag { display: grid; place-items: center; color: var(--warn); visibility: hidden; }
-  .row.is-off .flag { visibility: visible; }
-
-  .pts {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 38px;
-    padding: 0 10px 0 4px;
-    background: var(--field);
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    cursor: text;
-  }
-  .pts:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-  }
-  .row.is-off .pts { border-color: var(--warn); }
-  .pts input {
-    width: 46px;
-    height: 100%;
-    padding: 0 2px;
-    border: 0;
-    outline: none;
-    background: transparent;
-    color: var(--ink);
-    text-align: right;
-    font: 700 20px/1 var(--display);
-    font-variant-numeric: tabular-nums;
-  }
-  .pts input::placeholder { color: var(--muted); opacity: .55; }
-  .pts span { font-size: 12px; color: var(--muted); }
-
-  /* Sortable states */
-  .is-ghost { opacity: .4; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
-  .is-chosen { background: var(--surface); }
-  .is-drag { box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
-
-  .foot { margin-top: 28px; display: flex; justify-content: flex-end; }
-  .link-btn {
-    appearance: none; border: 0; background: none; padding: 4px 2px;
-    font: inherit; font-size: 14px; color: var(--muted);
-    text-decoration: underline; cursor: pointer;
-  }
-  .link-btn:hover { color: var(--ink); }
-
-  .sr {
-    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
-    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-  }
-
-  @media (max-width: 560px) {
-    .sub { display: none; }
-    .top-inner { padding: 10px 12px; gap: 12px; }
-    .counter { width: 158px; }
-    .counter-num { font-size: 24px; }
-    .wrap { padding: 16px 12px 40px; }
-    .row { grid-template-columns: 22px 22px 32px minmax(0, 1fr) 16px auto; column-gap: 8px; padding: 8px 6px; }
-    .rank { font-size: 21px; }
-    .badge { width: 32px; height: 32px; font-size: 11px; }
-    .pts { padding-right: 6px; }
-    .pts span { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Condensed:wght@600;700;800&family=Sofia+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -315,356 +26,65 @@
       <div class="counter-note" id="counterNote"></div>
     </div>
   </div>
+  <nav class="nav" aria-label="Main">
+    <div class="nav-inner">
+      <a href="#/picks" data-nav="picks">My picks</a>
+      <a href="#/leagues" data-nav="leagues">Leagues</a>
+      <div class="account" id="account"></div>
+    </div>
+  </nav>
 </header>
 
 <main class="wrap">
-  <p class="intro">Drag the handle to put each division in the order you expect it to finish, then enter every team's final point total. A warning icon means a team has more points than a team you ranked above it.</p>
+  <p class="muted" id="loading">Loading…</p>
 
-  <details class="how">
-    <summary>How scoring works</summary>
-    <div class="body">
-      <p><strong>Points accuracy:</strong> each team is worth up to 10 points. You lose 1 point for every point you're off, down to a minimum of 0.</p>
-      <p><strong>Position bonus:</strong> +10 for each team you place in its exact spot in its division.</p>
-      <p><strong>Perfect entry:</strong> 20 per team, 640 in total.</p>
-      <p><strong>Valid totals:</strong> the league hands out 2 points per regulation game and 3 per overtime game. Across 1,344 games, that puts the season total between 2,688 and 4,032 points.</p>
-    </div>
-  </details>
+  <section id="view-picks" hidden>
+    <div class="banner" id="banner" hidden></div>
+    <p class="intro" id="intro">Drag the handle to put each division in the order you expect it to finish, then enter every team's final point total. A warning icon means a team has more points than a team you ranked above it.</p>
 
-  <div id="league"></div>
+    <details class="how">
+      <summary>How scoring works</summary>
+      <div class="body">
+        <p><strong>Points accuracy:</strong> each team is worth up to 10 points. You lose 1 point for every point you're off, down to a minimum of 0.</p>
+        <p><strong>Position bonus:</strong> +10 for each team you place in its exact spot in its division.</p>
+        <p><strong>Perfect entry:</strong> 20 per team, 640 in total.</p>
+        <p><strong>Valid totals:</strong> the league hands out 2 points per regulation game and 3 per overtime game. Across 1,344 games, that puts the season total between 2,688 and 4,032 points.</p>
+      </div>
+    </details>
 
-  <div class="foot"><button type="button" class="link-btn" id="resetBtn">Clear all picks</button></div>
+    <div id="standings"></div>
+    <div class="foot"><button type="button" class="link-btn" id="resetBtn">Clear all picks</button></div>
+  </section>
+
+  <section id="view-leagues" hidden></section>
+  <section id="view-league" hidden></section>
+  <section id="view-join" hidden></section>
 </main>
 
+<div class="submit-bar" id="submitBar" hidden>
+  <div class="submit-inner">
+    <p class="submit-status" id="submitStatus"></p>
+    <button type="button" class="btn primary" id="submitBtn">Submit picks</button>
+  </div>
+</div>
+
+<dialog id="confirmDlg" aria-labelledby="dlgTitle">
+  <form method="dialog">
+    <h2 id="dlgTitle">Lock in your picks?</h2>
+    <p>Once you submit, your picks can't be changed for the rest of the season. Check your order and points one more time.</p>
+    <div class="dlg-actions">
+      <button class="btn" value="cancel">Keep editing</button>
+      <button class="btn primary" value="confirm">Lock in picks</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
 <div class="sr" id="sr" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
-<script>
-(() => {
-'use strict';
-
-/* ================= League rules ================= */
-const GAMES = 84;                                   // games per team in 2026-27
-const TEAM_COUNT = 32;
-// Total games = GAMES * TEAM_COUNT / 2 (each game has two teams).
-// Each game awards 2 points (regulation) or 3 points (OT/shootout).
-const MIN_TOTAL = GAMES * TEAM_COUNT;               // 2,688: every game ends in regulation
-const MAX_TOTAL = (GAMES * TEAM_COUNT * 3) / 2;     // 4,032: every game goes to overtime
-const MAX_TEAM  = GAMES * 2;                        // 168: win every game
-
-/* ================= Teams: [code, city, nickname, color] ================= */
-const LEAGUE = [
-  { conf: 'Eastern Conference', divisions: [
-    { name: 'Atlantic', teams: [
-      ['BOS', 'Boston',    'Bruins',        '#FFB81C'],
-      ['BUF', 'Buffalo',   'Sabres',        '#003087'],
-      ['DET', 'Detroit',   'Red Wings',     '#CE1126'],
-      ['FLA', 'Florida',   'Panthers',      '#B9975B'],
-      ['MTL', 'Montréal',  'Canadiens',     '#AF1E2D'],
-      ['OTT', 'Ottawa',    'Senators',      '#C52032'],
-      ['TBL', 'Tampa Bay', 'Lightning',     '#1A56B0'],
-      ['TOR', 'Toronto',   'Maple Leafs',   '#00205B'],
-    ]},
-    { name: 'Metropolitan', teams: [
-      ['CAR', 'Carolina',     'Hurricanes',    '#CC0000'],
-      ['CBJ', 'Columbus',     'Blue Jackets',  '#002654'],
-      ['NJD', 'New Jersey',   'Devils',        '#CE1126'],
-      ['NYI', 'New York',     'Islanders',     '#00539B'],
-      ['NYR', 'New York',     'Rangers',       '#0038A8'],
-      ['PHI', 'Philadelphia', 'Flyers',        '#F74902'],
-      ['PIT', 'Pittsburgh',   'Penguins',      '#FCB514'],
-      ['WSH', 'Washington',   'Capitals',      '#C8102E'],
-    ]},
-  ]},
-  { conf: 'Western Conference', divisions: [
-    { name: 'Central', teams: [
-      ['CHI', 'Chicago',   'Blackhawks',  '#CF0A2C'],
-      ['COL', 'Colorado',  'Avalanche',   '#6F263D'],
-      ['DAL', 'Dallas',    'Stars',       '#006847'],
-      ['MIN', 'Minnesota', 'Wild',        '#154734'],
-      ['NSH', 'Nashville', 'Predators',   '#FFB81C'],
-      ['STL', 'St. Louis', 'Blues',       '#002F87'],
-      ['UTA', 'Utah',      'Mammoth',     '#6CACE4'],
-      ['WPG', 'Winnipeg',  'Jets',        '#004C97'],
-    ]},
-    { name: 'Pacific', teams: [
-      ['ANA', 'Anaheim',     'Ducks',         '#F47A38'],
-      ['CGY', 'Calgary',     'Flames',        '#D2001C'],
-      ['EDM', 'Edmonton',    'Oilers',        '#FF4C00'],
-      ['LAK', 'Los Angeles', 'Kings',         '#111111'],
-      ['SJS', 'San Jose',    'Sharks',        '#006D75'],
-      ['SEA', 'Seattle',     'Kraken',        '#99D9D9'],
-      ['VAN', 'Vancouver',   'Canucks',       '#00843D'],
-      ['VGK', 'Vegas',       'Golden Knights','#B4975A'],
-    ]},
-  ]},
-];
-
-const DIVISIONS = LEAGUE.flatMap(c => c.divisions);
-const TEAMS = {};
-for (const d of DIVISIONS) {
-  for (const [code, city, nick, color] of d.teams) TEAMS[code] = { code, city, nick, color };
-}
-
-/* --- scoring (start) --- Not used by the UI yet; ready for when results exist. */
-function scoreTeam(pred, actual) {
-  const pointsScore = Math.max(0, 10 - Math.abs(actual.points - pred.points));
-  const positionBonus = pred.position === actual.position ? 10 : 0;
-  return pointsScore + positionBonus;
-}
-// predicted / actual: { BOS: { points: 101, position: 2 }, ... } (position = rank within division)
-function scoreEntry(predicted, actual) {
-  return Object.keys(actual).reduce((sum, code) => sum + scoreTeam(predicted[code], actual[code]), 0);
-}
-/* --- scoring (end) --- */
-
-/* ================= State + persistence ================= */
-const STORE_KEY = 'nhl-standings-picks-2026-27';
-
-function defaultState() {
-  const order = {};
-  for (const d of DIVISIONS) order[d.name] = d.teams.map(t => t[0]);
-  return { order, points: {} };
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return null;
-    const saved = JSON.parse(raw);
-    const s = defaultState();
-    for (const d of DIVISIONS) {
-      const codes = d.teams.map(t => t[0]);
-      const o = saved.order && saved.order[d.name];
-      if (Array.isArray(o) && o.length === codes.length && codes.every(c => o.includes(c))) s.order[d.name] = o.slice();
-    }
-    let total = 0;
-    for (const code of Object.keys(TEAMS)) {
-      const v = saved.points && saved.points[code];
-      if (Number.isInteger(v) && v >= 0 && v <= MAX_TEAM && total + v <= MAX_TOTAL) { s.points[code] = v; total += v; }
-    }
-    return s;
-  } catch (e) { return null; }
-}
-function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
-}
-
-let state = loadState() || defaultState();
-
-function getTotal() {
-  let t = 0;
-  for (const code of Object.keys(TEAMS)) t += state.points[code] || 0;
-  return t;
-}
-
-/* ================= DOM helpers ================= */
-const $ = id => document.getElementById(id);
-const fmt = n => n.toLocaleString('en-US');
-const reducedMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-function inkOn(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const luma = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
-  return luma > 150 ? '#0F1D2B' : '#FFFFFF';
-}
-function announce(msg) { $('sr').textContent = msg; }
-
-const GRIP = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" fill="currentColor"><circle cx="7" cy="5" r="1.6"/><circle cx="13" cy="5" r="1.6"/><circle cx="7" cy="10" r="1.6"/><circle cx="13" cy="10" r="1.6"/><circle cx="7" cy="15" r="1.6"/><circle cx="13" cy="15" r="1.6"/></svg>';
-const WARN = '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 2.6 18.4 17H1.6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 8v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="14.4" r="1" fill="currentColor"/></svg>';
-
-/* ================= Counter ================= */
-let flashMsg = null, flashTimer = null;
-function flash(msg) {
-  flashMsg = msg;
-  clearTimeout(flashTimer);
-  flashTimer = setTimeout(() => { flashMsg = null; refresh(); }, 2800);
-  announce(msg);
-}
-
-/* ================= Rendering ================= */
-const lists = {};      // division name -> <ol>
-const divTotals = {};  // division name -> <b>
-let sortables = [];
-
-function render() {
-  sortables.forEach(s => s.destroy());
-  sortables = [];
-  const root = $('league');
-  root.innerHTML = '';
-
-  for (const conf of LEAGUE) {
-    const sec = document.createElement('section');
-    sec.className = 'conf';
-    const h2 = document.createElement('h2');
-    h2.textContent = conf.conf;
-    const grid = document.createElement('div');
-    grid.className = 'divs';
-    for (const div of conf.divisions) grid.appendChild(buildDivision(div));
-    sec.append(h2, grid);
-    root.appendChild(sec);
-  }
-  refresh();
-}
-
-function buildDivision(div) {
-  const card = document.createElement('article');
-  card.className = 'card';
-  card.innerHTML = `<div class="card-h"><h3>${div.name}</h3><span class="card-total">Total <b>0</b></span></div>`;
-  divTotals[div.name] = card.querySelector('b');
-
-  const ol = document.createElement('ol');
-  ol.className = 'list';
-  ol.setAttribute('aria-label', `${div.name} division, in predicted order`);
-  for (const code of state.order[div.name]) ol.appendChild(buildRow(code));
-  card.appendChild(ol);
-  lists[div.name] = ol;
-
-  if (window.Sortable) {
-    sortables.push(Sortable.create(ol, {
-      handle: '.grip',
-      animation: reducedMotion ? 0 : 160,
-      ghostClass: 'is-ghost',
-      chosenClass: 'is-chosen',
-      dragClass: 'is-drag',
-      onEnd: evt => commitOrder(div.name, evt.item),
-    }));
-  }
-  return card;
-}
-
-function buildRow(code) {
-  const t = TEAMS[code];
-  const name = `${t.city} ${t.nick}`;
-  const li = document.createElement('li');
-  li.className = 'row';
-  li.dataset.code = code;
-  li.innerHTML = `
-    <button type="button" class="grip" aria-label="Reorder ${name}. Drag, or use the up and down arrow keys.">${GRIP}</button>
-    <span class="rank" aria-hidden="true"></span>
-    <span class="badge" style="--c:${t.color};--f:${inkOn(t.color)}" aria-hidden="true">${t.code}</span>
-    <span class="name"><span class="city">${t.city}</span><span class="nick">${t.nick}</span></span>
-    <span class="flag" role="img" aria-label="More points than a team ranked above" title="More points than a team ranked above it">${WARN}</span>
-    <label class="pts">
-      <input type="text" inputmode="numeric" autocomplete="off" maxlength="3" placeholder="–" aria-label="Predicted points for ${name}">
-      <span>pts</span>
-    </label>`;
-
-  const input = li.querySelector('input');
-  input.value = state.points[code] != null ? String(state.points[code]) : '';
-
-  input.addEventListener('focus', () => input.select());
-  input.addEventListener('input', () => {
-    const digits = input.value.replace(/\D/g, '');
-    setPoints(code, digits === '' ? null : parseInt(digits, 10), input);
-  });
-  input.addEventListener('keydown', e => {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      const cur = state.points[code] || 0;
-      setPoints(code, Math.max(0, cur + (e.key === 'ArrowUp' ? 1 : -1)), input);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const all = [...document.querySelectorAll('.pts input')];
-      const next = all[all.indexOf(input) + 1];
-      if (next) next.focus(); else input.blur();
-    }
-  });
-
-  const grip = li.querySelector('.grip');
-  grip.addEventListener('keydown', e => {
-    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-    e.preventDefault();
-    const ol = li.parentNode;
-    if (e.key === 'ArrowUp' && li.previousElementSibling) ol.insertBefore(li, li.previousElementSibling);
-    else if (e.key === 'ArrowDown' && li.nextElementSibling) ol.insertBefore(li.nextElementSibling, li);
-    else return;
-    grip.focus();
-    commitOrder(divisionOf(code), li);
-  });
-
-  return li;
-}
-
-function divisionOf(code) {
-  return DIVISIONS.find(d => d.teams.some(t => t[0] === code)).name;
-}
-
-/* ================= Actions ================= */
-function commitOrder(divName, li) {
-  const ol = lists[divName];
-  state.order[divName] = [...ol.children].map(n => n.dataset.code);
-  refresh();
-  save();
-  const t = TEAMS[li.dataset.code];
-  announce(`${t.city} ${t.nick} is now number ${state.order[divName].indexOf(li.dataset.code) + 1} of ${state.order[divName].length} in the ${divName}`);
-}
-
-function setPoints(code, v, input) {
-  if (v !== null) {
-    if (v > MAX_TEAM) { v = MAX_TEAM; flash(`A team can earn at most ${MAX_TEAM} points in ${GAMES} games`); }
-    const others = getTotal() - (state.points[code] || 0);
-    const room = Math.max(0, MAX_TOTAL - others);
-    if (v > room) { v = room; flash(`League total can't go above ${fmt(MAX_TOTAL)}`); }
-  }
-  state.points[code] = v;
-  const s = v === null ? '' : String(v);
-  if (input.value !== s) input.value = s;
-  refresh();
-  save();
-}
-
-function refresh() {
-  const total = getTotal();
-
-  // Counter
-  $('totalNum').textContent = fmt(total);
-  $('fill').style.width = (total / MAX_TOTAL * 100) + '%';
-  $('zone').style.left = (MIN_TOTAL / MAX_TOTAL * 100) + '%';
-  const counter = $('counter');
-  counter.classList.toggle('is-ok', total >= MIN_TOTAL);
-  counter.classList.toggle('is-flash', !!flashMsg);
-  let note;
-  if (flashMsg) note = flashMsg;
-  else if (total < MIN_TOTAL) note = `${fmt(MIN_TOTAL - total)} short of the ${fmt(MIN_TOTAL)} minimum`;
-  else if (total >= MAX_TOTAL) note = `At the ${fmt(MAX_TOTAL)} maximum`;
-  else note = `Valid total (${fmt(MIN_TOTAL)} to ${fmt(MAX_TOTAL)})`;
-  $('counterNote').textContent = note;
-
-  // Ranks, order warnings, division totals
-  for (const d of DIVISIONS) {
-    let sub = 0;
-    let lowestAbove = Infinity;
-    [...lists[d.name].children].forEach((li, i) => {
-      li.querySelector('.rank').textContent = i + 1;
-      const v = state.points[li.dataset.code];
-      li.classList.toggle('is-off', v != null && v > lowestAbove);
-      if (v != null) { sub += v; lowestAbove = Math.min(lowestAbove, v); }
-    });
-    divTotals[d.name].textContent = fmt(sub);
-  }
-}
-
-/* ================= Reset ================= */
-let armed = false, armTimer = null;
-const resetBtn = $('resetBtn');
-function disarm() { armed = false; resetBtn.textContent = 'Clear all picks'; }
-resetBtn.addEventListener('click', () => {
-  if (!armed) {
-    armed = true;
-    resetBtn.textContent = 'Click again to clear all picks';
-    armTimer = setTimeout(disarm, 3000);
-    return;
-  }
-  clearTimeout(armTimer);
-  disarm();
-  state = defaultState();
-  save();
-  render();
-  announce('All picks cleared');
-});
-
-render();
-})();
-</script>
+<script src="config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
